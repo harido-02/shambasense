@@ -1,0 +1,71 @@
+# Crop requirements for the rule-based suitability score (FAO EcoCrop style).
+#
+# Each range is {abs_min, opt_min, opt_max, abs_max}: the crop fails outside the
+# absolute limits and does best inside the optimum. rain_mm is the total over the
+# crop's own growing period (onset + days_to_maturity), not the calendar season.
+#
+# STARTING VALUES ONLY. Check every range against FAO EcoCrop and the KALRO /
+# Ministry crop production guides, record the source, and set verified: true
+# before you report results.
+
+crops:
+  maize:
+    name: {en: Maize, sw: Mahindi}
+    days_to_maturity: 120
+    days_to_maturity_by_county: {trans_nzoia: 180, nakuru: 150, meru: 120, machakos: 100}
+    rain_mm: {abs_min: 300, opt_min: 500, opt_max: 900, abs_max: 1600}
+    tmean_c: {abs_min: 12, opt_min: 18, opt_max: 30, abs_max: 38}
+    ph: {abs_min: 4.5, opt_min: 5.5, opt_max: 7.5, abs_max: 8.5}
+    bag_kg: 90
+    verified: false
+    source: "to verify: FAO EcoCrop; KALRO maize production guide"
+
+  beans:
+    name: {en: Beans, sw: Maharagwe}
+    days_to_maturity: 85
+    rain_mm: {abs_min: 200, opt_min: 300, opt_max: 500, abs_max: 900}
+    tmean_c: {abs_min: 10, opt_min: 16, opt_max: 24, abs_max: 30}
+    ph: {abs_min: 4.8, opt_min: 5.5, opt_max: 7.0, abs_max: 8.0}
+    bag_kg: 90
+    verified: false
+    source: "to verify: FAO EcoCrop (Phaseolus vulgaris)"
+
+  potatoes:
+    name: {en: Irish potatoes, sw: Viazi mviringo}
+    days_to_maturity: 110
+    rain_mm: {abs_min: 250, opt_min: 400, opt_max: 700, abs_max: 1200}
+    tmean_c: {abs_min: 8, opt_min: 14, opt_max: 20, abs_max: 27}
+    ph: {abs_min: 4.5, opt_min: 5.0, opt_max: 6.5, abs_max: 7.5}
+    bag_kg: 50
+    verified: false
+    source: "to verify: FAO EcoCrop (Solanum tuberosum); NPCK guidelines"
+
+  sorghum:
+    name: {en: Sorghum, sw: Mtama}
+    days_to_maturity: 110
+    rain_mm: {abs_min: 200, opt_min: 350, opt_max: 650, abs_max: 1200}
+    tmean_c: {abs_min: 12, opt_min: 22, opt_max: 32, abs_max: 40}
+    ph: {abs_min: 4.5, opt_min: 5.5, opt_max: 7.5, abs_max: 8.5}
+    bag_kg: 90
+    verified: false
+    source: "to verify: FAO EcoCrop (Sorghum bicolor)"
+
+  green_grams:
+    name: {en: Green grams, sw: Ndengu}
+    days_to_maturity: 70
+    rain_mm: {abs_min: 150, opt_min: 250, opt_max: 450, abs_max: 800}
+    tmean_c: {abs_min: 15, opt_min: 22, opt_max: 32, abs_max: 40}
+    ph: {abs_min: 4.5, opt_min: 5.5, opt_max: 7.5, abs_max: 8.2}
+    bag_kg: 90
+    verified: false
+    source: "to verify: FAO EcoCrop (Vigna radiata)"
+
+  tomatoes:
+    name: {en: Tomatoes, sw: Nyanya}
+    days_to_maturity: 100
+    rain_mm: {abs_min: 200, opt_min: 350, opt_max: 650, abs_max: 1200}
+    tmean_c: {abs_min: 10, opt_min: 18, opt_max: 27, abs_max: 33}
+    ph: {abs_min: 4.5, opt_min: 5.5, opt_max: 6.8, abs_max: 8.0}
+    bag_kg: null
+    verified: false
+    source: "to verify: FAO EcoCrop (Solanum lycopersicum)"

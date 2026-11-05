@@ -1,0 +1,32 @@
+# Render Blueprint: a web service (Docker) and a PostgreSQL database.
+# In Render: New > Blueprint > pick this repository > Apply.
+services:
+  - type: web
+    name: shambasense
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shambasense-db
+          property: connectionString
+      - key: SHAMBA_DEMO
+        value: "1"            # set to 0 once real KilimoSTAT yields are loaded
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: ADMIN_PHONE      # your number, e.g. 0712345678 (creates the admin account)
+        sync: false
+      - key: ADMIN_PIN        # 4-digit PIN for that account
+        sync: false
+      - key: AT_USERNAME      # Africa's Talking: "sandbox" for testing
+        sync: false
+      - key: AT_API_KEY
+        sync: false
+
+databases:
+  - name: shambasense-db
+    plan: free
+    databaseName: shambasense
+    user: shambasense

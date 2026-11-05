@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ShambaSense</title>
+  <meta name="description" content="Crop advice for Kenyan farmers: what to plant this season, when to plant, likely harvest and profit.">
+  <meta name="theme-color" content="#1F5E3B">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preload" href="/static/vendor/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="shell">
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <header class="topbar">
+      <a class="wordmark" href="#/">Shamba<span>Sense</span></a>
+      <span class="spacer"></span>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="sw" aria-pressed="false">SW</button>
+      </div>
+      <a class="me-button" id="me-button" href="#/me"></a>
+    </header>
+    <div class="banner banner-demo" id="banner-demo" hidden></div>
+    <div class="banner banner-offline" id="banner-offline" hidden></div>
+    <main class="main" id="main" tabindex="-1"></main>
+  </div>
+  <script src="/static/js/runtime-config.js"></script>
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

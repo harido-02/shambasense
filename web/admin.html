@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · ShambaSense</title>
+  <meta name="theme-color" content="#1F5E3B">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="admin">
+  <header class="topbar">
+    <a class="wordmark" href="/admin" style="display:block">Shamba<span>Sense</span> <span style="color:var(--soil-2);font-weight:600;font-stretch:100%;font-size:1rem">admin</span></a>
+    <span class="spacer"></span>
+    <a class="btn btn-quiet" href="/">Open the app</a>
+    <button type="button" class="btn btn-quiet" id="signout" hidden>Sign out</button>
+  </header>
+  <main class="main" id="main" style="padding-bottom:4rem"></main>
+  <script src="/static/js/runtime-config.js"></script>
+  <script type="module" src="/static/js/admin.js"></script>
+</body>
+</html>

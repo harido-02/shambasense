@@ -1,0 +1,49 @@
+# ShambaSense runtime settings. Environment variables override paths and secrets
+# (see .env.example); everything agronomic lives in crops.yaml and counties.yaml.
+
+climate:
+  # Years of daily weather fetched for each location. Analog seasons are drawn
+  # from these years, so a longer record gives a better spread of outcomes.
+  start_year: 1995
+  end_year: 2025
+
+yields:
+  start_year: 2012
+  end_year: 2025
+
+onset:
+  # Agronomic onset of rains: the first day after the season opens on which
+  # `wet_mm` falls within `wet_days` days, with no dry spell of `dry_spell_days`
+  # (days below `dry_day_mm`) in the following `check_days` days.
+  search_days: 75
+  wet_mm: 20
+  wet_days: 3
+  dry_day_mm: 1.0
+  dry_spell_days: 7
+  check_days: 30
+
+forecast:
+  # Order in which seasonal forecast sources are tried. "kmd" is the outlook
+  # loaded from the Kenya Meteorological Department; "open_meteo" is ECMWF SEAS5
+  # (not bias-corrected); "climatology" means equal odds and always works.
+  priority: [kmd, open_meteo, climatology]
+  # SEAS5 tercile probabilities are shrunk toward 1/3 by this trust factor
+  # (1 = use as is, 0 = ignore) because they are not bias-corrected.
+  open_meteo_trust: 0.5
+  open_meteo_forecast_days: 210
+
+recommendation:
+  min_suitability: 0.2        # below this a crop is listed as not suitable
+  monte_carlo_samples: 2000
+  random_seed: 42
+  price_lookback_months: 12
+  study_area_radius_km: 60    # points further from every county centre get a warning
+  same_site_km: 3             # points this close to a county reference point reuse its data
+
+model:
+  quantiles: [0.1, 0.5, 0.9]
+  max_iter: 300
+  learning_rate: 0.05
+  max_depth: 3
+  min_samples_leaf: 8
+  l2_regularization: 1.0

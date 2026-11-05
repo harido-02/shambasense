@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.env
+
+data/*.db
+data/cache/
+data/processed/
+data/raw/
+models/*.joblib
+models/*.json
+reports/figures/*.png
+reports/*.csv
+
+# Android app (Capacitor)
+mobile/node_modules/
+mobile/dist/

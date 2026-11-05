@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ShambaSense</string>
+    <string name="title_activity_main">ShambaSense</string>
+    <string name="package_name">ke.shambasense.app</string>
+    <string name="custom_url_scheme">ke.shambasense.app</string>
+</resources>

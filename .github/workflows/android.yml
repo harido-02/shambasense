@@ -1,0 +1,51 @@
+name: Android APK
+# Builds the ShambaSense Android app and publishes it on the "android-latest" release.
+# Set the repository variable SHAMBA_API_BASE (Settings > Secrets and variables > Actions >
+# Variables) to the hosted address, e.g. https://shambasense.onrender.com
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["web/**", "mobile/**", ".github/workflows/android.yml"]
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Package the web app for Android
+        working-directory: mobile
+        env:
+          SHAMBA_API_BASE: ${{ vars.SHAMBA_API_BASE }}
+        run: |
+          npm ci
+          node build-web.mjs
+          npx cap sync android
+      - name: Build the APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ShambaSense-android
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish to the android-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk ShambaSense.apk
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest ShambaSense.apk \
+            --title "ShambaSense for Android (latest build)" \
+            --notes "Built from ${GITHUB_SHA::7}. On your phone: download ShambaSense.apk, open it, and allow installing from this source when Android asks."
