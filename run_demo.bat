@@ -1,5 +1,7 @@
 @echo off
 rem ShambaSense demo launcher for Windows.
+rem   run_demo.bat         open ShambaSense on this computer
+rem   run_demo.bat phone   also let phones on the same Wi-Fi open it
 rem First run: finds or installs Python 3.12, creates a virtual environment, installs
 rem packages, loads SYNTHETIC demo data and trains the model (5-10 minutes).
 rem Later runs start in seconds.
@@ -7,6 +9,9 @@ cd /d "%~dp0"
 title ShambaSense
 set PYTHONUTF8=1
 set DATABASE_URL=sqlite:///data/demo.db
+set SHAMBA_DEMO=1
+set HOST=127.0.0.1
+if /i "%~1"=="phone" set HOST=0.0.0.0
 
 call :find_python
 if not defined PY (
@@ -27,12 +32,12 @@ if not exist ".venv\Scripts\python.exe" (
 )
 set "VPY=%~dp0.venv\Scripts\python.exe"
 
-if not exist ".venv\installed.txt" (
+if not exist ".venv\installed-v2.txt" (
   echo Installing packages. This takes a few minutes the first time...
   "%VPY%" -m pip install --upgrade pip
   "%VPY%" -m pip install -r requirements.txt
   if errorlevel 1 goto :failed
-  echo done> ".venv\installed.txt"
+  echo done> ".venv\installed-v2.txt"
 )
 
 if not exist "data\demo.db" (
@@ -41,17 +46,33 @@ if not exist "data\demo.db" (
   if errorlevel 1 goto :failed
 )
 if not exist "models\yield_model.joblib" (
-  echo Training the model. About a minute...
+  echo.
+  echo Training the model. This takes about 5 minutes the first time; keep this window open.
   "%VPY%" -m shambasense.cli train
   if errorlevel 1 goto :failed
 )
 
 echo.
-echo ShambaSense is starting at http://127.0.0.1:8000   API docs: http://127.0.0.1:8000/docs
-echo Keep this window open while you use it. Close it to stop ShambaSense.
+echo ============================================================
+echo  ShambaSense is starting: http://127.0.0.1:8000  (opens in your browser)
+echo  Admin dashboard:         http://127.0.0.1:8000/admin
+if /i "%~1"=="phone" call :show_phone_address
+echo  Keep this window open while you use it. Close it to stop.
+echo ============================================================
 start "" cmd /c "timeout /t 6 >nul & start http://127.0.0.1:8000"
-"%VPY%" -m shambasense.cli serve
+"%VPY%" -m shambasense.cli serve --host %HOST% --port 8000
 pause
+exit /b 0
+
+
+:show_phone_address
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' -and $_.PrefixOrigin -ne 'WellKnown' } | Select-Object -First 1).IPAddress"`) do set LANIP=%%I
+if defined LANIP (
+  echo  On your phone, same Wi-Fi: http://%LANIP%:8000
+) else (
+  echo  On your phone, same Wi-Fi: http://THIS-LAPTOP-IP:8000  ^(find it with ipconfig^)
+)
+echo  If Windows asks whether to allow Python on networks, choose Allow on Private networks.
 exit /b 0
 
 

@@ -284,7 +284,9 @@ def train_and_evaluate(table: pd.DataFrame, figures_dir: Path | None = None) -> 
     if info["rows"] < 40:
         log.warning("only %d training rows; results will be unstable", info["rows"])
     evaluation, year_preds = {}, None
-    for scheme in ("year", "county"):
+    for step, scheme in enumerate(("year", "county"), start=1):
+        log.info("Training %d/3: testing the model on %s it has not seen…", step,
+                 "years" if scheme == "year" else "counties")
         try:
             metrics, preds = cross_validate(table, scheme)
             evaluation[scheme] = metrics
@@ -295,6 +297,7 @@ def train_and_evaluate(table: pd.DataFrame, figures_dir: Path | None = None) -> 
                 preds.to_csv(figures_dir.parent / f"cv_predictions_{scheme}.csv", index=False)
         except RuntimeError as exc:
             evaluation[scheme] = {"error": str(exc)}
+    log.info("Training 3/3: fitting the final model on all %d rows…", len(table))
     model = YieldModel(sorted(table["crop"].unique())).fit(table)
     if year_preds is not None:
         model.interval_scale = calibrate_interval(year_preds)
