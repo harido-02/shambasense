@@ -176,7 +176,7 @@ def _sk_model(kind: str, crops: list[str]):
         est = make_pipeline(SimpleImputer(strategy="median"), StandardScaler(), Ridge(alpha=1.0))
     else:
         est = make_pipeline(SimpleImputer(strategy="median"),
-                            RandomForestRegressor(n_estimators=300, min_samples_leaf=3, random_state=0, n_jobs=-1))
+                            RandomForestRegressor(n_estimators=300, min_samples_leaf=3, random_state=0, n_jobs=1))
     return est
 
 
