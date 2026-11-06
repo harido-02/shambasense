@@ -55,12 +55,14 @@ if not exist "models\yield_model.joblib" (
 
 echo.
 echo ============================================================
-echo  ShambaSense is starting: http://127.0.0.1:8000  (opens in your browser)
+echo  ShambaSense is starting. Your browser opens by itself when it is ready
+echo  (up to a minute on a slow computer). Address: http://127.0.0.1:8000
 echo  Admin dashboard:         http://127.0.0.1:8000/admin
 if /i "%~1"=="phone" call :show_phone_address
 echo  Keep this window open while you use it. Close it to stop.
 echo ============================================================
-start "" cmd /c "timeout /t 6 >nul & start http://127.0.0.1:8000"
+rem Open the browser only once the server answers, so nobody sees "site can't be reached".
+start "" /min powershell -NoProfile -WindowStyle Hidden -Command "for ($i = 0; $i -lt 180; $i++) { try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 http://127.0.0.1:8000/health | Out-Null; Start-Process 'http://127.0.0.1:8000'; break } catch { Start-Sleep -Seconds 1 } }"
 "%VPY%" -m shambasense.cli serve --host %HOST% --port 8000
 pause
 exit /b 0
