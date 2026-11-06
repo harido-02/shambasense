@@ -11,6 +11,8 @@ permissions:
   contents: write
 jobs:
   apk:
+    # Skip quietly until the app is hosted and SHAMBA_API_BASE is set (manual runs always try).
+    if: ${{ vars.SHAMBA_API_BASE != '' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
