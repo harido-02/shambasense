@@ -265,7 +265,7 @@ def load_costs(path: str | Path) -> int:
         if np.isnan(cost):
             continue
         records.append({"county_id": normalise_county(r.get("county")), "crop": crop, "cost_kes_ha": cost,
-                        "source": r.get("source") or "county agriculture office"})
+                        "source": str(r.get("source") or "county agriculture office")[:128]})
     with db.session() as s, s.begin():
         s.query(db.ProductionCost).filter(~db.ProductionCost.source.like("SYNTHETIC%")).delete(synchronize_session=False)
     with db.session() as s, s.begin():

@@ -9,6 +9,8 @@ loads it (the server's `bootstrap` does this automatically and removes any SYNTH
 | `climate_daily.csv.gz`, `locations.csv` | Daily rain and temperature for each county, averaged over its reference points, from 1981 | NASA POWER (community AG). "These data were obtained from the NASA Langley Research Center POWER Project funded through the NASA Earth Science Directorate Applied Science Program." |
 | `soil_profile.csv` | Topsoil (0-30 cm) pH, organic carbon, nitrogen, clay, sand, CEC per county | ISRIC SoilGrids v2.0, CC BY 4.0 |
 | `wfp_food_prices_kenya.csv` | WFP market prices for the study crops | World Food Programme VAM, via HDX, CC BY-IGO |
+| `production_costs.csv` | Cost of production per acre for each crop, in 2025 shillings, with the original figure, its year and source | Tegemeo Institute (2018) cost-of-production survey; Makueni County gross margins (2022 budgets) and Tomato Value Chain Strategy 2024-2028; inflated with World Bank CPI inflation for Kenya |
+| `yield_cleaning_log.csv` | Every yield value removed in cleaning, with the reason | generated from the HarvestStat file |
 | `snapshot.json` | When the weather and soil were fetched, and their date range | |
 
 Refresh the weather, soil and prices with the **Fetch open data** workflow (Actions tab), or by

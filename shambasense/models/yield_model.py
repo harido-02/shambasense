@@ -66,6 +66,13 @@ class YieldModel:
         self.ranges: dict[str, tuple[float, float]] = {}
         self.interval_scale = 1.0     # widens p10-p90 to hit 80% coverage in cross-validation
         self.meta: dict = {}
+        # Season model: for a county with yield history, predict the log-ratio of yield to that county's
+        # own average for the crop, from the season's weather. The level model above covers places
+        # without history (and is what leave-one-county-out tests).
+        self.anomaly_params = dict(s.get("anomaly", {"max_iter": 150, "learning_rate": 0.03, "max_depth": 2,
+                                                      "min_samples_leaf": 20, "l2_regularization": 3.0}))
+        self.anomaly_models: dict[float, HistGradientBoostingRegressor] = {}
+        self.county_crop_mean: dict[str, float] = {}
 
     # ---------------------------------------------------------------- design matrix
     def design(self, df: pd.DataFrame) -> np.ndarray:
@@ -85,6 +92,13 @@ class YieldModel:
         self.models = {q: HistGradientBoostingRegressor(loss="quantile", quantile=q, random_state=0,
                                                         **self.params).fit(X, y)
                        for q in self.quantiles}
+        if "county_id" in df and df["county_id"].notna().all():
+            keys = df["county_id"].astype(str) + "|" + df["crop"]
+            self.county_crop_mean = df.groupby(keys)["yield_t_ha"].mean().to_dict()
+            anomaly = np.log(df["yield_t_ha"].to_numpy() / keys.map(self.county_crop_mean).to_numpy())
+            self.anomaly_models = {q: HistGradientBoostingRegressor(loss="quantile", quantile=q, random_state=0,
+                                                                    **self.anomaly_params).fit(X, anomaly)
+                                   for q in self.quantiles}
         self.reference = df.groupby("crop")[NUMERIC].median().to_dict("index")
         self.ranges = {c: (float(df[c].quantile(0.02)), float(df[c].quantile(0.98)))
                        for c in NUMERIC if df[c].notna().any()}
@@ -101,11 +115,32 @@ class YieldModel:
         return np.clip(preds, 0, None)
 
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Yield quantiles (t/ha). Rows with a known county use that county's history and the season
+        model; other rows use the level model (yield relative to the crop's average everywhere)."""
         rel = self.predict_relative(df)
         scale = df["crop"].map(self.crop_mean).to_numpy(dtype=float)
         out = rel * scale[:, None]
+        base = self._county_base(df)
+        known = ~np.isnan(base)
+        if known.any():
+            X = self.design(df[known])
+            la = np.column_stack([self.anomaly_models[q].predict(X) for q in self.quantiles])
+            la.sort(axis=1)
+            seasonal = base[known][:, None] * np.exp(la)
+            s = getattr(self, "interval_scale", 1.0)
+            mid = seasonal[:, 1].copy()
+            seasonal[:, 0] = mid - s * (mid - seasonal[:, 0])
+            seasonal[:, 2] = mid + s * (seasonal[:, 2] - mid)
+            out[known] = np.clip(seasonal, 0, None)
         names = [f"p{int(round(q * 100))}" for q in self.quantiles]
         return pd.DataFrame(out, columns=names, index=df.index)
+
+    def _county_base(self, df: pd.DataFrame) -> np.ndarray:
+        means = getattr(self, "county_crop_mean", {})
+        if not means or not getattr(self, "anomaly_models", None) or "county_id" not in df:
+            return np.full(len(df), np.nan)
+        keys = df["county_id"].astype(str) + "|" + df["crop"].astype(str)
+        return keys.map(means).to_numpy(dtype=float)
 
     def knows(self, crop_id: str) -> bool:
         return crop_id in self.crop_mean

@@ -40,6 +40,7 @@ const EN = {
   outlook_source: (src, n) => `Source: ${src}. Based on ${n} past seasons at this place.`,
   climatology_source: "no seasonal forecast available, so every past season counts equally",
   model_note: (date, quality, verified) => `Model trained ${date} on ${quality === "synthetic" ? "synthetic test data" : quality === "real" ? "county yield records" : "no data yet"}. ` +
+    (quality === "real" ? "Profit uses recent WFP wholesale prices and published production costs (Tegemeo, Makueni County) in 2025 shillings; your own costs may be lower. " : "") +
     (verified ? "Crop requirement ranges are verified." : "Crop requirement ranges are starting values awaiting expert verification."),
   save_farm: "Save as my farm", save: "Save", farm_name: "Farm name", farm_name_ph: "For example, Shamba ya juu",
   farm_saved: (name) => `${name} saved to My farms.`, signin_to_save: '<a href="#/me">Sign in</a> to save farms and get SMS reminders before planting.',
@@ -123,6 +124,7 @@ const SW = {
   outlook_source: (src, n) => `Chanzo: ${src}. Kulingana na misimu ${n} iliyopita mahali hapa.`,
   climatology_source: "hakuna utabiri wa msimu, kwa hivyo kila msimu uliopita una uzito sawa",
   model_note: (date, quality, verified) => `Mfumo ulifunzwa ${date} kwa ${quality === "synthetic" ? "data bandia ya majaribio" : quality === "real" ? "takwimu za mavuno za kaunti" : "bila data"}. ` +
+    (quality === "real" ? "Faida inatumia bei za jumla za WFP za karibuni na gharama za uzalishaji zilizochapishwa (Tegemeo, Kaunti ya Makueni) kwa shilingi za 2025; gharama zako huenda zikawa chini. " : "") +
     (verified ? "Viwango vya mahitaji ya mazao vimethibitishwa." : "Viwango vya mahitaji ya mazao bado vinasubiri kuthibitishwa na wataalamu."),
   save_farm: "Hifadhi kama shamba langu", save: "Hifadhi", farm_name: "Jina la shamba", farm_name_ph: "Kwa mfano, Shamba ya juu",
   farm_saved: (name) => `${name} limehifadhiwa kwenye Mashamba.`, signin_to_save: '<a href="#/me">Ingia</a> ili kuhifadhi mashamba na kupata SMS za ukumbusho kabla ya kupanda.',

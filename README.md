@@ -2,7 +2,7 @@
 
 ShambaSense recommends which crops a Kenyan farmer should plant in the coming season, when to plant them, how much they are likely to harvest and what they are likely to earn. It combines soil data, seasonal rainfall forecasts, a machine learning yield model trained on county crop statistics, and market prices.
 
-**Live:** https://shambasense.onrender.com (admin dashboard at `/admin`). The hosted copy runs on synthetic test data until real KilimoSTAT yields are loaded, and Render's free plan sleeps after 15 minutes without visitors, so the first visit can take about a minute.
+**Live:** https://shambasense.onrender.com (admin dashboard at `/admin`). It runs on real data: county yields 1981-2023 (HarvestStat Africa, from Ministry of Agriculture statistics), NASA POWER weather, SoilGrids soil, WFP market prices and published production costs; see `data/real/README.md`. Render's free plan sleeps after 15 minutes without visitors, so the first visit can take about a minute.
 
 Farmers reach it three ways:
 
@@ -50,10 +50,13 @@ Open http://127.0.0.1:8000 for the web app and http://127.0.0.1:8000/docs for th
 
 ## Real data workflow
 
+The real-data snapshot in `data/real/` is all the server needs: `python -m shambasense.cli load-real` loads it (the server's start-up does this automatically when `SHAMBA_DEMO=0`), then `train`. The **Fetch open data** workflow refreshes its weather, soil and prices. To build it from agency files instead:
+
 Use the default database (unset `DATABASE_URL`, or point it at PostgreSQL).
 
 ```bash
 python -m shambasense.cli ingest-live                       # NASA POWER + SoilGrids for all four counties (internet)
+python -m shambasense.cli load-yields data/real/harveststat_kenya_study_counties.csv --format harveststat
 python -m shambasense.cli load-yields data/raw/kilimostat.csv --format kilimostat
 python -m shambasense.cli load-yields data/raw/county_yields.csv           # anything transcribed from reports
 python -m shambasense.cli load-kmd data/raw/kmd_stations.csv              # optional, improves rainfall

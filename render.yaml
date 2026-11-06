@@ -13,7 +13,7 @@ services:
           name: shambasense-db
           property: connectionString
       - key: SHAMBA_DEMO
-        value: "1"            # set to 0 once real KilimoSTAT yields are loaded
+        value: "0"            # real data from data/real/; "1" runs the synthetic demo
       - key: ADMIN_TOKEN
         generateValue: true
       - key: ADMIN_PHONE      # your number, e.g. 0712345678 (creates the admin account)

@@ -12,13 +12,15 @@ COPY config ./config
 COPY shambasense ./shambasense
 COPY web ./web
 COPY data/templates ./data/templates
+COPY data/real ./data/real
 COPY scripts ./scripts
 COPY start.sh ./
 
-# Train the demo model at build time (deterministic synthetic data), so a free
-# server with a wiped disk starts in seconds. Real deployments retrain from the
-# admin dashboard after loading agency data.
-RUN DATABASE_URL=sqlite:////tmp/build.db SHAMBA_DEMO=1 SHAMBA_OFFLINE=1 \
+# Train the model at build time from the real-data snapshot in data/real/ (county yields,
+# NASA POWER weather, SoilGrids soil), so the server starts in seconds. Build with
+# --build-arg SHAMBA_DEMO=1 for the synthetic demo instead.
+ARG SHAMBA_DEMO=0
+RUN DATABASE_URL=sqlite:////tmp/build.db SHAMBA_DEMO=$SHAMBA_DEMO SHAMBA_OFFLINE=1 \
     python -m shambasense.cli bootstrap --no-figures && rm -f /tmp/build.db
 
 RUN useradd --create-home shamba && chown -R shamba /app

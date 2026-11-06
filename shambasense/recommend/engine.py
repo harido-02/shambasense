@@ -63,7 +63,14 @@ def _weighted_quantile(values: np.ndarray, weights: np.ndarray, qs: list[float])
     return [float(np.interp(q, cum, v)) for q in qs]
 
 
-def _price(county_id: str, crop: str) -> tuple[float | None, str | None]:
+def _price_spread(prices: pd.Series) -> float:
+    """Month-to-month price risk: standard deviation of log monthly prices (0.25 if too few)."""
+    vals = prices[prices > 0]
+    return float(np.clip(np.std(np.log(vals)), 0.05, 0.8)) if len(vals) >= 6 else 0.25
+
+
+def _price(county_id: str, crop: str) -> tuple[float | None, str | None, float]:
+    """Median recent wholesale price (KES/kg), where it comes from, and its log-scale spread."""
     months = config.settings()["recommendation"]["price_lookback_months"]
     for scope, params in (("county", {"c": county_id, "k": crop}), ("national", {"k": crop})):
         where = "crop = :k AND county_id = :c" if scope == "county" else "crop = :k"
@@ -72,10 +79,17 @@ def _price(county_id: str, crop: str) -> tuple[float | None, str | None]:
         if df.empty:
             continue
         df["date"] = pd.to_datetime(df["date"])
+        if scope == "county" and df["date"].max() < pd.Timestamp.today() - pd.DateOffset(months=24):
+            continue   # the county's own market series has stopped; national prices are more current
         recent = df[df["date"] > df["date"].max() - pd.DateOffset(months=months)]
         where_txt = ", ".join(sorted(recent["market"].dropna().unique())[:2]) if scope == "county" else "national markets"
-        return float(recent["wholesale_kes_kg"].median()), where_txt or "local markets"
-    return None, None
+        latest = df["date"].max()
+        if latest < pd.Timestamp.today() - pd.DateOffset(months=12):
+            where_txt = f"{where_txt or 'local markets'}, {latest:%m/%Y}"   # say when an old price is all there is
+        spread_window = df[df["date"] > df["date"].max() - pd.DateOffset(months=24)]
+        monthly = spread_window.groupby(spread_window["date"].dt.to_period("M"))["wholesale_kes_kg"].median()
+        return float(recent["wholesale_kes_kg"].median()), where_txt or "local markets", _price_spread(monthly)
+    return None, None, 0.25
 
 
 def _cost(county_id: str, crop: str) -> float | None:
@@ -166,6 +180,8 @@ def recommend(lat: float | None = None, lon: float | None = None, county_id: str
         samples = None
         if model is not None and model.knows(crop_id):
             frame = pd.DataFrame([{k: v for k, v in r.items() if not k.startswith("_")} for r in rows])
+            frame["county_id"] = site.county_id      # lets the model use this county's yield history
+            rep["county_id"] = site.county_id
             q = model.predict(frame)
             p10, p50, p90 = (q[c].to_numpy() for c in ("p10", "p50", "p90"))
             idx = rng.choice(len(rows), size=n, p=w)
@@ -189,7 +205,7 @@ def recommend(lat: float | None = None, lon: float | None = None, county_id: str
         else:
             item["reasons"].append(t(lang, "no_model"))
 
-        price, where = _price(site.county_id, crop_id)
+        price, where, price_sd = _price(site.county_id, crop_id)
         cost = _cost(site.county_id, crop_id)
         if price is not None:
             item["price_kes_kg"] = round(price, 1)
@@ -197,7 +213,10 @@ def recommend(lat: float | None = None, lon: float | None = None, county_id: str
         if cost is not None:
             item["cost_kes_ha"] = round(cost)
         if samples is not None and price is not None and cost is not None:
-            margin = samples * 1000 * price - cost
+            # Price at harvest is uncertain too: lognormal around the recent median, with the
+            # spread of the last two years' monthly prices (gluts and shortages).
+            price_draws = price * np.exp(price_sd * rng.standard_normal(len(samples)) - price_sd ** 2 / 2)
+            margin = samples * 1000 * price_draws - cost
             mq = np.percentile(margin, [10, 50, 90])
             item["gross_margin_kes_ha"] = {"p10": round(mq[0]), "p50": round(mq[1]), "p90": round(mq[2])}
             item["gross_margin_kes_acre"] = {k: round(v * HA_PER_ACRE) for k, v in item["gross_margin_kes_ha"].items()}

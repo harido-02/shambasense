@@ -171,3 +171,14 @@ def test_harveststat_cleaning_keeps_droughts_and_drops_errors():
     assert kept("beans", 2001) and not any(kept("beans", y) for y in (2002, 2003, 2004)) and kept("beans", 2005)
     assert yields.loc[yields.crop == "potatoes", "yield_t_ha"].iloc[0] == 9.0   # production / area wins
     assert set(log["reason"].str.split().str[0]) >= {"before", "outside", "same"}
+
+
+def test_wfp_commodities_and_markets():
+    from shambasense.ingest import wfp
+
+    assert wfp.crop_for("Maize (white, dry)") == "maize" and wfp.crop_for("Maize flour (white)") is None
+    assert wfp.crop_for("Beans (mung)") == "green_grams" and wfp.crop_for("Beans (rosecoco)") == "beans"
+    assert wfp.crop_for("Potatoes (Irish, red)") == "potatoes" and wfp.crop_for("Cowpeas") is None
+    assert wfp.county_for(-0.30, 36.08) == "nakuru"           # Wakulima market, Nakuru
+    assert wfp.county_for(0.52, 35.28) == "trans_nzoia"       # Eldoret, 63 km from Kitale
+    assert wfp.county_for(-4.05, 39.67) is None               # Mombasa: a national market
