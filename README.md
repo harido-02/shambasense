@@ -2,6 +2,8 @@
 
 ShambaSense recommends which crops a Kenyan farmer should plant in the coming season, when to plant them, how much they are likely to harvest and what they are likely to earn. It combines soil data, seasonal rainfall forecasts, a machine learning yield model trained on county crop statistics, and market prices.
 
+**Live:** https://shambasense.onrender.com (admin dashboard at `/admin`). The hosted copy runs on synthetic test data until real KilimoSTAT yields are loaded, and Render's free plan sleeps after 15 minutes without visitors, so the first visit can take about a minute.
+
 Farmers reach it three ways:
 
 - **Web app**, installable on any phone from the browser (works offline with the last results).
@@ -120,7 +122,7 @@ The Docker image trains the demo model while it builds, and every start runs `bo
 
 `mobile/` packages the web app with [Capacitor](https://capacitorjs.com). The GitHub workflow `.github/workflows/android.yml` builds the APK on every push and publishes it on the **android-latest** release:
 
-1. In the GitHub repository, add the variable `SHAMBA_API_BASE` (Settings → Secrets and variables → Actions → Variables) with the hosted address, e.g. `https://shambasense.onrender.com`.
+1. In the GitHub repository, add the variable `SHAMBA_API_BASE` (Settings → Secrets and variables → Actions → Variables) with the hosted address, `https://shambasense.onrender.com`. Until it is set, the workflow skips automatic builds.
 2. Run the **Android APK** workflow (Actions tab), or push a change.
 3. Download `ShambaSense.apk` from the release on an Android phone and open it; allow installing from this source when asked.
 
