@@ -14,8 +14,10 @@ let crops = [];
 function signInForm(message = "") {
   $("#signout").hidden = true;
   main.innerHTML = `<h1 class="page-title">Administrator sign-in</h1>
-    <p class="hint">Use the phone number and PIN of an administrator account. Create one with
-    <code>python -m shambasense.cli create-admin --phone 07XXXXXXXX --pin XXXX</code>.</p>
+    <p class="hint">Use the phone number and PIN of an administrator account. To create one on Windows, double-click
+    <strong>make_admin.bat</strong> in the ShambaSense folder; elsewhere run
+    <code>python -m shambasense.cli create-admin --phone 07XXXXXXXX --pin XXXX</code>. On the hosted copy, set
+    <code>ADMIN_PHONE</code> and <code>ADMIN_PIN</code>.</p>
     <form class="form" id="login">
       <div class="field"><label for="phone">Mobile number</label><input class="input" id="phone" type="tel" autocomplete="tel" required></div>
       <div class="field"><label for="pin">PIN</label><input class="input input-pin" id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" required></div>
