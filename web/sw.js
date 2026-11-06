@@ -1,6 +1,6 @@
 // ShambaSense service worker: the app opens offline, and the last advice, prices and weather
 // are shown (marked as saved copies) when there is no connection.
-const VERSION = "shambasense-v3";
+const VERSION = "shambasense-v4";
 const SHELL = [
   "/", "/manifest.webmanifest",
   "/static/css/app.css", "/static/js/app.js", "/static/js/api.js", "/static/js/charts.js", "/static/js/config.js",

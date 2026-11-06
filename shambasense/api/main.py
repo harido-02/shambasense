@@ -78,7 +78,7 @@ def _run(fn, **kwargs):
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.get("/health", tags=["system"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["system"])
 def health():
     meta = metadata() or {}
     return {"status": "ok", "version": __version__, "model_loaded": get_model() is not None,

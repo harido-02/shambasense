@@ -46,8 +46,11 @@ def crop_features(series: DailySeries, clim: pd.DataFrame, soil: dict | None, co
     """Features for one crop grown in one season of one year at one place."""
     season_cfg = config.counties()[county_id]["seasons"][season]
     median_offset = clim.attrs.get("median_offset", 30.0)
-    match = clim.loc[clim["year"] == year]
-    clim_row = match.iloc[0].to_dict() if not match.empty else None
+    by_year = clim.attrs.get("_by_year")
+    if by_year is None:   # one dict lookup per crop and year instead of a pandas filter
+        by_year = {int(r["year"]): r for r in clim.to_dict("records")}
+        clim.attrs["_by_year"] = by_year
+    clim_row = by_year.get(int(year))
     start = crop_window_start(year, season_cfg, clim_row, median_offset)
     days = config.maturity_days(crop_id, county_id)
     feats = window_features(series, start, days)

@@ -59,7 +59,7 @@ const EN = {
   farm_missing: "That farm was not found.", delete_farm: "Delete farm", delete_confirm: "Tap again to delete",
   farm_deleted: "Farm deleted.",
 
-  prices_hint: "Median wholesale price per kilogram in local markets, from KAMIS.", all_kenya: "All Kenya",
+  prices_hint: "Median wholesale price per kilogram in markets near each county.", all_kenya: "All Kenya",
   national_fallback: "national prices (none for this county)", vs_last_year: "vs last year", source: "Source",
   no_prices: "No prices are available yet.", back_prices: "← Prices", latest_price: "Latest price",
   change_12m: "Change over 12 months", range_12m: "Range in the last 12 months", markets: "Markets",
@@ -143,7 +143,7 @@ const SW = {
   farm_missing: "Shamba hilo halikupatikana.", delete_farm: "Futa shamba", delete_confirm: "Gusa tena kufuta",
   farm_deleted: "Shamba limefutwa.",
 
-  prices_hint: "Bei ya kati ya jumla kwa kilo katika masoko ya karibu, kutoka KAMIS.", all_kenya: "Kenya nzima",
+  prices_hint: "Bei ya kati ya jumla kwa kilo katika masoko yaliyo karibu na kila kaunti.", all_kenya: "Kenya nzima",
   national_fallback: "bei za kitaifa (hakuna za kaunti hii)", vs_last_year: "ukilinganisha na mwaka jana", source: "Chanzo",
   no_prices: "Bado hakuna bei.", back_prices: "← Bei", latest_price: "Bei ya hivi karibuni",
   change_12m: "Mabadiliko kwa miezi 12", range_12m: "Kiwango cha miezi 12 iliyopita", markets: "Masoko",

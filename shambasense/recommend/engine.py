@@ -69,16 +69,31 @@ def _price_spread(prices: pd.Series) -> float:
     return float(np.clip(np.std(np.log(vals)), 0.05, 0.8)) if len(vals) >= 6 else 0.25
 
 
-def _price(county_id: str, crop: str) -> tuple[float | None, str | None, float]:
+_PRICES: dict = {"version": None, "table": None}
+
+
+def _price_table() -> pd.DataFrame:
+    """All wholesale prices, read once and kept until the table changes (cheap version check)."""
+    version = tuple(db.read_df("SELECT COUNT(*) AS n, MAX(id) AS m FROM market_price").iloc[0].tolist())
+    if _PRICES["version"] != version:
+        table = db.read_df("SELECT county_id, crop, date, market, wholesale_kes_kg FROM market_price "
+                           "WHERE wholesale_kes_kg IS NOT NULL")
+        table["date"] = pd.to_datetime(table["date"])
+        _PRICES.update(version=version, table=table)
+    return _PRICES["table"]
+
+
+def _price(county_id: str, crop: str, table: pd.DataFrame | None = None) -> tuple[float | None, str | None, float]:
     """Median recent wholesale price (KES/kg), where it comes from, and its log-scale spread."""
     months = config.settings()["recommendation"]["price_lookback_months"]
-    for scope, params in (("county", {"c": county_id, "k": crop}), ("national", {"k": crop})):
-        where = "crop = :k AND county_id = :c" if scope == "county" else "crop = :k"
-        df = db.read_df(f"SELECT date, market, wholesale_kes_kg FROM market_price WHERE {where} "
-                        "AND wholesale_kes_kg IS NOT NULL", params)
+    table = _price_table() if table is None else table
+    for scope in ("county", "national"):
+        mask = table["crop"] == crop
+        if scope == "county":
+            mask &= table["county_id"] == county_id
+        df = table[mask]
         if df.empty:
             continue
-        df["date"] = pd.to_datetime(df["date"])
         if scope == "county" and df["date"].max() < pd.Timestamp.today() - pd.DateOffset(months=24):
             continue   # the county's own market series has stopped; national prices are more current
         recent = df[df["date"] > df["date"].max() - pd.DateOffset(months=months)]
@@ -149,6 +164,7 @@ def recommend(lat: float | None = None, lon: float | None = None, county_id: str
     rng = np.random.default_rng(rec_cfg["random_seed"])
     n = rec_cfg["monte_carlo_samples"]
     results, not_suitable, warnings = [], [], []
+    prices = _price_table()
     for crop_id, crop_cfg in config.crops().items():
         rows, w = [], []
         for i, y in enumerate(clim["year"]):
@@ -205,7 +221,7 @@ def recommend(lat: float | None = None, lon: float | None = None, county_id: str
         else:
             item["reasons"].append(t(lang, "no_model"))
 
-        price, where, price_sd = _price(site.county_id, crop_id)
+        price, where, price_sd = _price(site.county_id, crop_id, prices)
         cost = _cost(site.county_id, crop_id)
         if price is not None:
             item["price_kes_kg"] = round(price, 1)

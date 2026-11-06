@@ -117,11 +117,12 @@ class YieldModel:
     def predict(self, df: pd.DataFrame) -> pd.DataFrame:
         """Yield quantiles (t/ha). Rows with a known county use that county's history and the season
         model; other rows use the level model (yield relative to the crop's average everywhere)."""
-        rel = self.predict_relative(df)
-        scale = df["crop"].map(self.crop_mean).to_numpy(dtype=float)
-        out = rel * scale[:, None]
         base = self._county_base(df)
         known = ~np.isnan(base)
+        out = np.zeros((len(df), len(self.quantiles)))
+        if (~known).any():   # the level model only where there is no county history
+            scale = df["crop"].map(self.crop_mean).to_numpy(dtype=float)
+            out[~known] = self.predict_relative(df[~known]) * scale[~known][:, None]
         if known.any():
             X = self.design(df[known])
             la = np.column_stack([self.anomaly_models[q].predict(X) for q in self.quantiles])
