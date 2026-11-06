@@ -1,0 +1,5 @@
+id,kind,name,lat,lon,county_id
+county:machakos,county,Machakos,-1.518,37.263,machakos
+county:meru,county,Meru,0.046,37.656,meru
+county:nakuru,county,Nakuru,-0.303,36.08,nakuru
+county:trans_nzoia,county,Trans Nzoia,1.016,35.006,trans_nzoia

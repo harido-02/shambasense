@@ -1,0 +1,19 @@
+{
+  "exported_at": "2026-11-06T20:17:35+00:00",
+  "counties": [
+    "machakos",
+    "meru",
+    "nakuru",
+    "trans_nzoia"
+  ],
+  "weather_days": 66956,
+  "weather_range": [
+    "1981-01-01",
+    "2026-10-30"
+  ],
+  "soil_locations": 4,
+  "sources": {
+    "weather": "NASA POWER daily (community AG)",
+    "soil": "SoilGrids v2.0, 0-30 cm"
+  }
+}

@@ -1,0 +1,5 @@
+location_id,ph,soc_g_kg,nitrogen_g_kg,clay_pct,sand_pct,cec_cmol_kg,source
+county:machakos,6.133,15.144,1.511,38.789,47.511,14.694,SoilGrids v2.0 (3 points)
+county:meru,5.525,33.084,3.274,57.666,21.166,17.533,SoilGrids v2.0 (3 points)
+county:nakuru,6.4,23.167,2.097,38.267,31.1,24.8,SoilGrids v2.0 (3 points)
+county:trans_nzoia,6.066,26.992,2.194,42.525,28.059,26.892,SoilGrids v2.0 (3 points)
