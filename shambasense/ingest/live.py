@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import date, timedelta
 
 import numpy as np
 import pandas as pd
@@ -24,12 +24,17 @@ def _climate_records(frame: pd.DataFrame, loc_id: str, source: str) -> list[dict
     return out
 
 
+def latest_weather_day() -> date:
+    """NASA POWER publishes daily data with a few days' delay; never ask for days that do not exist yet."""
+    return date.today() - timedelta(days=7)
+
+
 def ingest_county(county_id: str, start_year: int | None = None, end_year: int | None = None) -> dict:
     """Average NASA POWER weather and SoilGrids soil over a county's reference points."""
     cfg = config.counties()[county_id]
     s = config.settings()["climate"]
     start = date(start_year or s["start_year"], 1, 1)
-    end = date(end_year or s["end_year"], 12, 31)
+    end = min(date(end_year or s["end_year"], 12, 31), latest_weather_day())
     points = cfg.get("reference_points", [[cfg["lat"], cfg["lon"]]])
 
     # Several reference points can share one POWER grid cell; fetch each cell once.
@@ -65,7 +70,8 @@ def ingest_point(lat: float, lon: float, county_id: str | None) -> tuple[str, st
     glat, glon = nasa_power.grid_cell(lat, lon)
     clim_id = f"grid:{glat:.3f}_{glon:.3f}"
     if db.read_df("SELECT 1 FROM climate_daily WHERE location_id = :l LIMIT 1", {"l": clim_id}).empty:
-        frame = nasa_power.fetch_daily(glat, glon, date(s["start_year"], 1, 1), date(s["end_year"], 12, 31))
+        frame = nasa_power.fetch_daily(glat, glon, date(s["start_year"], 1, 1),
+                                       min(date(s["end_year"], 12, 31), latest_weather_day()))
         db.upsert_location(clim_id, "grid", f"POWER cell {glat}, {glon}", glat, glon, county_id)
         db.replace_rows(db.ClimateDaily, {"location_id": clim_id}, _climate_records(frame, clim_id, "NASA POWER"))
 

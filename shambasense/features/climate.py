@@ -117,7 +117,7 @@ def season_total(series: DailySeries, start: date, end: date) -> float | None:
     return float(np.nansum(rain))
 
 
-def climatology(series: DailySeries, season_cfg: dict) -> pd.DataFrame:
+def climatology(series: DailySeries, season_cfg: dict, first_year: int | None = None) -> pd.DataFrame:
     """Per year: outlook-window rain total, its tercile, and the onset of rains.
 
     Columns: year, total_mm, category (0 below, 1 normal, 2 above), onset (date or NaT),
@@ -125,7 +125,7 @@ def climatology(series: DailySeries, season_cfg: dict) -> pd.DataFrame:
     """
     onset_cfg = config.settings()["onset"]
     rows = []
-    for year in range(series.first.year, series.last.year + 1):
+    for year in range(max(series.first.year, first_year or 0), series.last.year + 1):
         start, end = season_window(year, season_cfg["outlook_months"])
         total = season_total(series, start, end)
         if total is None:

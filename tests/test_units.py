@@ -139,3 +139,35 @@ def test_nearest_county(env):
 
     county, km = nearest_county(-1.52, 37.27)
     assert county == "machakos" and km < 2
+
+
+def test_harveststat_cleaning_keeps_droughts_and_drops_errors():
+    import pandas as pd
+
+    from shambasense.ingest import harveststat
+
+    def rec(product, year, indicator, value, county="Nakuru", season="Annual"):
+        return {"admin_1": county, "product": product, "season_name": season, "harvest_year": year,
+                "indicator": indicator, "value": value}
+
+    rows = []
+    maize = {1990: 2.4, 1991: 2.6, 1992: 2.2, 1993: 2.5, 1994: 2.7, 1995: 2.3, 1996: 0.4,   # 1996: drought, kept
+             1997: 2.5, 1998: 30.0}                                                          # 1998: unit slip
+    for year, y in maize.items():
+        rows.append(rec("Maize", year, "yield", y))
+    rows += [rec("Maize", 1975, "yield", 2.0)]                                    # before the weather record
+    rows += [rec("Tomato", 2015, "yield", 1.0), rec("Tomato", 2018, "yield", 20.0)]   # placeholder 1.0
+    rows += [rec("Beans (mixed)", y, "yield", 0.54) for y in (2001, 2002, 2003, 2004)] + [rec("Beans (mixed)", 2005, "yield", 0.6)]
+    rows += [rec("Potato", 2019, "area", 100.0), rec("Potato", 2019, "production", 900.0), rec("Potato", 2019, "yield", 5.0)]
+    rows += [rec("Maize", 2019, "yield", 9.9, season="Long")]                   # seasonal rows are not used
+    yields, log = harveststat.clean(pd.DataFrame(rows))
+
+    def kept(crop, year):
+        return not yields[(yields.crop == crop) & (yields.year == year)].empty
+
+    assert kept("maize", 1996)                         # a bad year stays in
+    assert not kept("maize", 1998) and not kept("maize", 1975) and not kept("maize", 2019)
+    assert not kept("tomatoes", 2015) and kept("tomatoes", 2018)
+    assert kept("beans", 2001) and not any(kept("beans", y) for y in (2002, 2003, 2004)) and kept("beans", 2005)
+    assert yields.loc[yields.crop == "potatoes", "yield_t_ha"].iloc[0] == 9.0   # production / area wins
+    assert set(log["reason"].str.split().str[0]) >= {"before", "outside", "same"}

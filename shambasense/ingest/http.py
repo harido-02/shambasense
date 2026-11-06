@@ -14,6 +14,7 @@ from .. import config
 
 log = logging.getLogger(__name__)
 USER_AGENT = "ShambaSense/0.1 (final-year research project)"
+_last_call: dict[str, float] = {}
 
 
 class OfflineError(RuntimeError):
@@ -28,8 +29,11 @@ def _cache_path(source: str, url: str, params: dict) -> Path:
 
 
 def get_json(url: str, params: dict, source: str, ttl_days: float | None = None,
-             timeout: int = 90, retries: int = 3) -> dict:
-    """Return the JSON body for url+params, from cache when fresh enough."""
+             timeout: int = 90, retries: int = 3, min_interval: float = 0.0) -> dict:
+    """Return the JSON body for url+params, from cache when fresh enough.
+
+    min_interval spaces out network calls to one source (seconds), for rate-limited APIs.
+    """
     path = _cache_path(source, url, params)
     if path.exists():
         age_days = (time.time() - path.stat().st_mtime) / 86400
@@ -40,6 +44,10 @@ def get_json(url: str, params: dict, source: str, ttl_days: float | None = None,
 
     last_error: Exception | None = None
     for attempt in range(retries):
+        wait = _last_call.get(source, 0.0) + min_interval - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        _last_call[source] = time.time()
         try:
             resp = requests.get(url, params=params, timeout=timeout, headers={"User-Agent": USER_AGENT})
             if resp.status_code == 200:

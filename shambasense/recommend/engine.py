@@ -105,7 +105,9 @@ def recommend(lat: float | None = None, lon: float | None = None, county_id: str
     year = year or next_year_for(site.county_id, season, today)
     season_cfg = county["seasons"][season]
 
-    clim = climatology(site.series, season_cfg)
+    # Scenarios: the most recent `analog_years` seasons (a climate normal), not the whole record.
+    clim = climatology(site.series, season_cfg,
+                       first_year=site.series.last.year - rec_cfg.get("analog_years", 30) + 1)
     if len(clim) < 8:
         raise RuntimeError("fewer than 8 seasons of weather data for this location")
     fc = forecast or fc_mod.outlook(site.county_id, season, year, site.lat, site.lon, clim)

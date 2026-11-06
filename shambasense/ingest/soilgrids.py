@@ -46,5 +46,7 @@ def fetch_point(lat: float, lon: float) -> dict:
         {"lon": round(lon, 4), "lat": round(lat, 4), "property": list(PROPERTIES), "depth": DEPTHS, "value": "mean"},
         source=SOURCE,
         timeout=60,
+        retries=4,
+        min_interval=13.0,   # SoilGrids allows about 5 requests a minute
     )
     return parse(payload)

@@ -61,7 +61,8 @@ def _climate(county_id: str, start: int, end: int, rng: np.random.Generator) -> 
 def generate(seed: int = 7) -> dict:
     rng = np.random.default_rng(seed)
     s = config.settings()
-    c_start, c_end = s["climate"]["start_year"], s["climate"]["end_year"]
+    c_start = s["climate"].get("synthetic_start_year", s["climate"]["start_year"])
+    c_end = min(s["climate"]["end_year"], 2025)
     y_start, y_end = s["yields"]["start_year"], s["yields"]["end_year"]
     counts = {"climate_days": 0, "yields": 0, "prices": 0}
 

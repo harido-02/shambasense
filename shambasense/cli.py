@@ -2,7 +2,7 @@
 
     python -m shambasense.cli init-db
     python -m shambasense.cli ingest-live              # NASA POWER + SoilGrids for every county
-    python -m shambasense.cli load-yields FILE --format kilimostat
+    python -m shambasense.cli load-yields FILE --format kilimostat|harveststat
     python -m shambasense.cli load-kmd FILE | load-prices FILE | load-costs FILE | load-outlooks FILE
     python -m shambasense.cli build-dataset
     python -m shambasense.cli train
@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--seed", type=int, default=7)
     p = sub.add_parser("load-yields", help="load county yields")
     p.add_argument("path")
-    p.add_argument("--format", choices=["kilimostat", "csv"], default="csv")
+    p.add_argument("--format", choices=["kilimostat", "harveststat", "csv"], default="csv")
     for name, helptext in (("load-kmd", "KMD station weather"), ("load-prices", "KAMIS prices"),
                            ("load-costs", "production costs"), ("load-outlooks", "seasonal outlooks")):
         p = sub.add_parser(name, help=f"load {helptext}")
@@ -63,6 +63,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--reload", action="store_true")
     sub.add_parser("status", help="show what data is loaded")
+    p = sub.add_parser("export-data", help="write county weather and soil to the data/real/ snapshot")
+    p.add_argument("--dir")
+    p = sub.add_parser("load-real", help="load the data/real/ snapshot (replaces SYNTHETIC data)")
+    p.add_argument("--dir")
     p = sub.add_parser("create-admin", help="create (or promote) an administrator account")
     p.add_argument("--phone", required=True)
     p.add_argument("--pin", required=True)
@@ -93,7 +97,14 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "load-yields":
         from .ingest import loaders
 
-        n = loaders.load_kilimostat(args.path) if args.format == "kilimostat" else loaders.load_yields_csv(args.path)
+        if args.format == "harveststat":
+            from .ingest import harveststat
+
+            n = harveststat.load(args.path, log_path=config.ROOT / "reports" / "yield_cleaning_log.csv")
+        elif args.format == "kilimostat":
+            n = loaders.load_kilimostat(args.path)
+        else:
+            n = loaders.load_yields_csv(args.path)
         print(f"stored {n} yield rows")
     elif args.cmd in ("load-kmd", "load-prices", "load-costs", "load-outlooks"):
         from .ingest import loaders
@@ -151,7 +162,11 @@ def main(argv: list[str] | None = None) -> int:
         from .models.yield_model import MODEL_FILE
         from .services import auth
 
-        if db.read_df("SELECT 1 FROM climate_daily LIMIT 1").empty:
+        from .ingest import real
+
+        if not config.demo_mode() and real.available() and real.needs_loading():
+            print("bootstrap: loading real data from data/real/", real.load_all())
+        elif db.read_df("SELECT 1 FROM climate_daily LIMIT 1").empty:
             if config.demo_mode():
                 from .ingest import synthetic
 
@@ -164,7 +179,14 @@ def main(argv: list[str] | None = None) -> int:
                         print("bootstrap:", live.ingest_county(county_id))
                     except Exception as exc:  # noqa: BLE001
                         print(f"bootstrap: could not fetch {county_id}: {exc}")
-        if not (config.model_dir() / MODEL_FILE).exists():
+        from .models.yield_model import metadata
+
+        meta = metadata()
+        wanted = "synthetic" if config.demo_mode() else "real"
+        stale = meta is not None and meta.get("data_quality") != wanted and not (wanted == "real" and not real.available())
+        if stale:
+            print(f"bootstrap: the saved model was trained on {meta.get('data_quality')} data; retraining")
+        if stale or not (config.model_dir() / MODEL_FILE).exists():
             from .features.dataset import build_training_table
             from .models.yield_model import train_and_evaluate
 
@@ -185,6 +207,14 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 auth.update_user(int(found.iloc[0, 0]), is_admin=1)
         print("bootstrap: done")
+    elif args.cmd == "export-data":
+        from .ingest import snapshot
+
+        _print(snapshot.export(args.dir))
+    elif args.cmd == "load-real":
+        from .ingest import real
+
+        _print(real.load_all(args.dir))
     elif args.cmd == "send-reminders":
         from .services import reminders
 

@@ -217,6 +217,7 @@ def load_kamis(path: str | Path) -> int:
     raw = read_table(path)
     c_crop, c_market, c_county = _col(raw, "commodity", "product"), _col(raw, "market"), _col(raw, "county")
     c_date, c_whole, c_retail, c_unit = _col(raw, "date"), _col(raw, "wholesale"), _col(raw, "retail"), _col(raw, "unit")
+    c_source = _col(raw, "source")
     records, skipped = [], 0
     for _, r in raw.iterrows():
         crop = normalise_crop(r[c_crop])
@@ -235,10 +236,17 @@ def load_kamis(path: str | Path) -> int:
         records.append({"county_id": county, "market": str(r[c_market]) if c_market else None, "crop": crop,
                         "date": pd.to_datetime(r[c_date]).date(),
                         "wholesale_kes_kg": None if np.isnan(whole) else whole,
-                        "retail_kes_kg": None if np.isnan(retail) else retail, "source": "KAMIS"})
+                        "retail_kes_kg": None if np.isnan(retail) else retail,
+                        "source": str(r[c_source]) if c_source and pd.notna(r[c_source]) else "KAMIS"})
     if skipped:
-        log.warning("KAMIS: skipped %d rows without a price", skipped)
-    return db.replace_rows(db.MarketPrice, {"source": "KAMIS"}, records)
+        log.warning("prices: skipped %d rows without a price", skipped)
+    sources = sorted({rec["source"] for rec in records})
+    with db.session() as s, s.begin():
+        if sources:
+            s.query(db.MarketPrice).filter(db.MarketPrice.source.in_(sources)).delete(synchronize_session=False)
+        if records:
+            s.execute(db.insert(db.MarketPrice), records)
+    return len(records)
 
 
 # --------------------------------------------------------------------------- costs and outlooks

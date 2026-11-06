@@ -4,8 +4,9 @@
 climate:
   # Years of daily weather fetched for each location. Analog seasons are drawn
   # from these years, so a longer record gives a better spread of outcomes.
-  start_year: 1995
-  end_year: 2025
+  start_year: 1981            # NASA POWER daily data begin in 1981; county yields go back further
+  end_year: 2026              # capped at a week before today when fetching
+  synthetic_start_year: 1995  # range of the SYNTHETIC demo weather
 
 yields:
   start_year: 2012
@@ -39,6 +40,7 @@ recommendation:
   price_lookback_months: 12
   study_area_radius_km: 60    # points further from every county centre get a warning
   same_site_km: 3             # points this close to a county reference point reuse its data
+  analog_years: 30            # most recent seasons used as scenarios (a 30-year climate normal)
 
 model:
   quantiles: [0.1, 0.5, 0.9]
