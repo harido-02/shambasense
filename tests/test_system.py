@@ -158,7 +158,10 @@ def test_ussd_flow(client):
 
 def test_web_app_served(client):
     assert "ShambaSense" in client.get("/").text
-    assert client.get("/static/js/app.js").status_code == 200
+    app_js = client.get("/static/js/app.js")
+    assert app_js.status_code == 200 and app_js.headers["cache-control"] == "no-cache"   # updates reach users at once
+    assert client.get("/static/js/app.js", headers={"If-None-Match": app_js.headers["etag"]}).status_code == 304
+    assert "max-age" in client.get("/static/vendor/leaflet/leaflet.js").headers["cache-control"]
     assert "ShambaSense" in client.get("/admin").text
     sw = client.get("/sw.js")
     assert sw.status_code == 200 and "javascript" in sw.headers["content-type"]

@@ -187,8 +187,19 @@ def ussd_callback(sessionId: str = Form(""), serviceCode: str = Form(""), phoneN
 
 
 # ------------------------------------------------------------------ web app (installable) and admin
+class WebStatic(StaticFiles):
+    """Static files that browsers re-check on every load (a cheap 304 when unchanged), so app updates
+    reach users at once. Third-party libraries, fonts and icons never change and are cached for a week."""
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        long_lived = path.replace("\\", "/").startswith(("vendor/", "icons/"))
+        response.headers["Cache-Control"] = "public, max-age=604800" if long_lived else "no-cache"
+        return response
+
+
 if (WEB_DIR / "index.html").exists():
-    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+    app.mount("/static", WebStatic(directory=WEB_DIR), name="static")
 
     def _web(name: str, media_type: str | None = None, cache: str = "no-cache"):
         return FileResponse(WEB_DIR / name, media_type=media_type, headers={"Cache-Control": cache})
