@@ -3,7 +3,7 @@ rem Creates (or promotes) an administrator account for the dashboard at /admin.
 rem Run run_demo.bat once first, so the environment exists.
 cd /d "%~dp0"
 set PYTHONUTF8=1
-set DATABASE_URL=sqlite:///data/demo.db
+set DATABASE_URL=sqlite:///data/shambasense.db
 if not exist ".venv\Scripts\python.exe" (
   echo Run run_demo.bat first, then try again.
   pause

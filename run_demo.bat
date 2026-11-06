@@ -1,16 +1,16 @@
 @echo off
-rem ShambaSense demo launcher for Windows.
+rem ShambaSense launcher for Windows (real data from data\real).
 rem   run_demo.bat         open ShambaSense on this computer
 rem   run_demo.bat phone   also let phones on the same Wi-Fi open it
 rem First run: finds or installs Python 3.12, creates a virtual environment, installs
-rem packages, loads SYNTHETIC demo data and trains the model (a few minutes).
+rem packages, loads the real data and trains the model (a few minutes).
 rem Later runs start in seconds.
 cd /d "%~dp0"
 title ShambaSense
 set PYTHONUTF8=1
 set OMP_NUM_THREADS=1
-set DATABASE_URL=sqlite:///data/demo.db
-set SHAMBA_DEMO=1
+set DATABASE_URL=sqlite:///data/shambasense.db
+set SHAMBA_DEMO=0
 set HOST=127.0.0.1
 if /i "%~1"=="phone" set HOST=0.0.0.0
 
@@ -41,17 +41,10 @@ if not exist ".venv\installed-v2.txt" (
   echo done> ".venv\installed-v2.txt"
 )
 
-if not exist "data\demo.db" (
-  echo Loading SYNTHETIC demo data...
-  "%VPY%" -m shambasense.cli ingest-sample
-  if errorlevel 1 goto :failed
-)
-if not exist "models\yield_model.joblib" (
-  echo.
-  echo Training the model. This takes a minute or two; keep this window open.
-  "%VPY%" -m shambasense.cli train
-  if errorlevel 1 goto :failed
-)
+echo Preparing data and model (the first time this loads the real data and trains the model,
+echo which takes a few minutes; keep this window open)...
+"%VPY%" -m shambasense.cli bootstrap
+if errorlevel 1 goto :failed
 
 echo.
 echo ============================================================
